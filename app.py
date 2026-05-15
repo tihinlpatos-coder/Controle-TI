@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect, session, render_template_string
+from flask import Flask, render_template, request, redirect, session, url_for
 import os
 
 app = Flask(__name__)
@@ -7,50 +7,53 @@ app.secret_key = os.getenv("SECRET_KEY", "hospital-secret-key")
 USUARIO = "admin"
 SENHA = "1234"
 
+produtos = []
+
 @app.route("/", methods=["GET", "POST"])
 def login():
+    erro = None
     if request.method == "POST":
         if request.form.get("usuario") == USUARIO and request.form.get("senha") == SENHA:
             session["logado"] = True
-            return redirect("/sistema")
-        return "<h3>Usuário ou senha inválidos.</h3><a href='/'>Voltar</a>"
-    return """
-    <link href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' rel='stylesheet'>
-    <div class='container mt-5' style='max-width:420px'>
-      <div class='card shadow border-0 rounded-4'><div class='card-body p-4'>
-        <h2 class='mb-4'>🏥 Sistema Hospitalar</h2>
-        <form method='post'>
-          <input class='form-control mb-3' name='usuario' placeholder='Usuário'>
-          <input class='form-control mb-3' type='password' name='senha' placeholder='Senha'>
-          <button class='btn btn-primary w-100'>Entrar</button>
-        </form>
-        <small class='text-muted d-block mt-3'>Usuário: admin | Senha: 1234</small>
-      </div></div>
-    </div>
-    """
+            return redirect(url_for("sistema"))
+        erro = "Usuário ou senha inválidos."
+    return render_template("login.html", erro=erro)
 
 @app.route("/logout")
 def logout():
     session.clear()
-    return redirect("/")
+    return redirect(url_for("login"))
 
 @app.route("/sistema")
 def sistema():
     if not session.get("logado"):
-        return redirect("/")
-    return """
-    <link href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' rel='stylesheet'>
-    <div class='container mt-4'>
-      <div class='p-4 bg-white rounded shadow-sm'>
-        <h1>🏥 Sistema Hospitalar</h1>
-        <p class='text-muted'>Controle de Estoque</p>
-        <hr>
-        <h4>Nenhum produto cadastrado</h4>
-        <p>Clique em 'Novo Produto' para começar.</p>
-        <a href='/logout' class='btn btn-outline-secondary'>Sair</a>
-      </div>
-    </div>
-    """
+        return redirect(url_for("login"))
+    total_produtos = len(produtos)
+    total_estoque = sum(int(p["quantidade"]) for p in produtos) if produtos else 0
+    estoque_baixo = sum(1 for p in produtos if int(p["quantidade"]) < 10)
+    entradas_totais = sum(max(0, int(p["quantidade"])) for p in produtos) if produtos else 0
+    busca = request.args.get("q", "").lower()
+    lista = [p for p in produtos if busca in p["nome"].lower()] if busca else produtos
+    return render_template(
+        "dashboard.html",
+        produtos=lista,
+        total_produtos=total_produtos,
+        total_estoque=total_estoque,
+        estoque_baixo=estoque_baixo,
+        entradas_totais=entradas_totais,
+        busca=busca
+    )
+
+@app.route("/novo", methods=["POST"])
+def novo():
+    if not session.get("logado"):
+        return redirect(url_for("login"))
+    nome = request.form.get("nome", "").strip()
+    quantidade = request.form.get("quantidade", "0").strip()
+    lote = request.form.get("lote", "").strip()
+    if nome:
+        produtos.append({"nome": nome, "quantidade": quantidade or "0", "lote": lote})
+    return redirect(url_for("sistema"))
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 5000))

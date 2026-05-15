@@ -1,1 +1,3 @@
-# Sistema Hospitalar\nUsuário: admin\nSenha: 1234\n
+# Sistema Hospitalar Completo
+Usuário: admin
+Senha: 1234
