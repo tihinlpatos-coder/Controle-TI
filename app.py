@@ -1,4 +1,9 @@
-from flask import Flask, render_template, request, redirect, session, url_for
+from flask import Flask, render_template, request, redirect, session, url_for, send_file
+from openpyxl import Workbook
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+import tempfile
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import os
@@ -94,6 +99,41 @@ def movimentar(produto_id):
     db.session.add(Movimentacao(produto=produto.nome, tipo=tipo, quantidade=qtd))
     db.session.commit()
     return redirect(url_for("sistema"))
+
+
+@app.route("/relatorio_excel")
+def relatorio_excel():
+    if not session.get("logado"):
+        return redirect(url_for("login"))
+    produtos = Produto.query.order_by(Produto.nome).all()
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Estoque"
+    ws.append(["ID", "Produto", "Quantidade", "Lote", "Fabricação", "Validade"])
+    for p in produtos:
+        ws.append([p.id, p.nome, p.quantidade, p.lote, p.fabricacao, p.validade])
+    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx")
+    wb.save(tmp.name)
+    return send_file(tmp.name, as_attachment=True, download_name="relatorio_estoque.xlsx")
+
+@app.route("/relatorio_pdf")
+def relatorio_pdf():
+    if not session.get("logado"):
+        return redirect(url_for("login"))
+    produtos = Produto.query.order_by(Produto.nome).all()
+    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+    doc = SimpleDocTemplate(tmp.name, pagesize=A4)
+    data = [["ID", "Produto", "Qtd", "Lote", "Fabricação", "Validade"]]
+    for p in produtos:
+        data.append([str(p.id), p.nome, str(p.quantidade), p.lote or "", p.fabricacao or "", p.validade or ""])
+    table = Table(data, colWidths=[35, 180, 40, 70, 90, 90])
+    table.setStyle(TableStyle([
+        ("BACKGROUND", (0,0), (-1,0), colors.lightgrey),
+        ("GRID", (0,0), (-1,-1), 0.5, colors.black),
+    ]))
+    doc.build([table])
+    return send_file(tmp.name, as_attachment=True, download_name="relatorio_estoque.pdf")
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)))

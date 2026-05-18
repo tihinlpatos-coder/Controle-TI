@@ -15,7 +15,7 @@
 <div class='col-md-3'><div class='card card-soft'><div class='card-body'><small>ESTOQUE BAIXO</small><h2>{{ estoque_baixo }}</h2></div></div></div>
 <div class='col-md-3'><div class='card card-soft'><div class='card-body'><small>ENTRADAS TOTAIS</small><h2>{{ entradas_totais }}</h2></div></div></div>
 </div>
-<div class='card card-soft mb-4'><div class='card-body'>
+<div class='mb-3 d-flex gap-2'><a href='/relatorio_excel' class='btn btn-success'>📊 Excel</a><a href='/relatorio_pdf' class='btn btn-danger'>📄 PDF</a></div><div class='card card-soft mb-4'><div class='card-body'>
 <form method='post' action='/novo' class='row g-2'>
 <div class='col-md-3'><input class='form-control' name='nome' placeholder='Produto' required></div>
 <div class='col-md-2'><input class='form-control' name='quantidade' type='number' value='0'></div>
