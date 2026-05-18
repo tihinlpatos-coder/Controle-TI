@@ -1,3 +1,1 @@
-# Sistema Hospitalar com PostgreSQL
-Usuário: admin
-Senha: 1234
+# Sistema Hospitalar com Alertas de Validade
