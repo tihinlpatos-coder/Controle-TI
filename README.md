@@ -1,1 +1,1 @@
-# Sistema Hospitalar com Usuários e Permissões
+# Sistema Hospitalar Profissional
