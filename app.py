@@ -56,6 +56,13 @@ def init_db():
     conn.commit()
     conn.close()
 
+@app.route("/novo")
+def novo():
+    if not session.get("usuario"):
+        return redirect("/")
+
+    return render_template("novo.html")
+
 @app.route("/", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
