@@ -1,258 +1,86 @@
-
-from flask import Flask, render_template, request, redirect, session
-import sqlite3
-from datetime import datetime, date
+from flask import Flask, render_template_string, request, redirect, url_for
+import psycopg2
+import os
 
 app = Flask(__name__)
-app.secret_key = "hospital-secret-key"
 
-DB_NAME = "hospital.db"
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 def get_db():
-    conn = sqlite3.connect(DB_NAME)
-    conn.row_factory = sqlite3.Row
-    return conn
+    return psycopg2.connect(DATABASE_URL)
 
-def init_db():
+HTML = """
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Sistema Hospitalar</title>
+<style>
+body{font-family:Arial;background:#f4f4f4;padding:30px}
+.card{background:white;padding:20px;border-radius:10px}
+input,button{padding:10px;margin:5px;width:100%}
+table{width:100%;margin-top:20px;border-collapse:collapse}
+th,td{border:1px solid #ccc;padding:10px}
+button{background:#2563eb;color:white;border:none}
+</style>
+</head>
+<body>
+<div class="card">
+<h1>Sistema Hospitalar</h1>
+
+<form method="POST" action="/novo">
+<input type="text" name="nome" placeholder="Nome do produto" required>
+<input type="number" name="quantidade" placeholder="Quantidade" required>
+<button type="submit">Cadastrar Produto</button>
+</form>
+
+<table>
+<tr>
+<th>ID</th>
+<th>Produto</th>
+<th>Quantidade</th>
+</tr>
+
+{% for p in produtos %}
+<tr>
+<td>{{p[0]}}</td>
+<td>{{p[1]}}</td>
+<td>{{p[2]}}</td>
+</tr>
+{% endfor %}
+
+</table>
+</div>
+</body>
+</html>
+"""
+
+@app.route("/")
+def index():
     conn = get_db()
     cur = conn.cursor()
-
-    cur.execute('''
-    CREATE TABLE IF NOT EXISTS usuarios (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        usuario TEXT UNIQUE,
-        senha TEXT,
-        perfil TEXT
-    )
-    ''')
-
-    cur.execute('''
-    CREATE TABLE IF NOT EXISTS produtos (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nome TEXT,
-        quantidade INTEGER,
-        lote TEXT,
-        fabricacao TEXT,
-        validade TEXT
-    )
-    ''')
-
-    cur.execute('''
-    CREATE TABLE IF NOT EXISTS movimentacoes (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        produto_id INTEGER,
-        tipo TEXT,
-        quantidade INTEGER,
-        usuario TEXT,
-        data_movimentacao TEXT
-    )
-    ''')
-
-    cur.execute(
-        "INSERT OR IGNORE INTO usuarios(usuario, senha, perfil) VALUES (?, ?, ?)",
-        ("admin", "1234", "Administrador")
-    )
-
-    conn.commit()
-    conn.close()
-
-@app.route("/novo", methods=["GET", "POST"])
-def novo():
-
-    if request.method == "POST":
-
-        nome = request.form["nome"]
-        quantidade = request.form["quantidade"]
-        lote = request.form["lote"]
-        fabricacao = request.form["fabricacao"]
-        validade = request.form["validade"]
-
-        conn = get_db()
-        cur = conn.cursor()
-
-        cur.execute("""
-            INSERT INTO produtos
-            (nome, quantidade, lote, fabricacao, validade)
-            VALUES (%s, %s, %s, %s, %s)
-        """, (nome, quantidade, lote, fabricacao, validade))
-
-        conn.commit()
-
-        cur.close()
-        conn.close()
-
-        return redirect("/dashboard")
-
-    return render_template("novo.html")
-
-@app.route("/", methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        usuario = request.form["usuario"]
-        senha = request.form["senha"]
-
-        conn = get_db()
-        cur = conn.cursor()
-
-        cur.execute(
-            "SELECT * FROM usuarios WHERE usuario=? AND senha=?",
-            (usuario, senha)
-        )
-
-        user = cur.fetchone()
-        conn.close()
-
-        if user:
-            session["usuario"] = user["usuario"]
-            return redirect("/dashboard")
-
-    return render_template("login.html")
-
-@app.route("/logout")
-def logout():
-    session.clear()
-    return redirect("/")
-
-@app.route("/dashboard")
-def dashboard():
-    if not session.get("usuario"):
-        return redirect("/")
-
-    conn = get_db()
-    cur = conn.cursor()
-
-    cur.execute("SELECT COUNT(*) FROM produtos")
-    total_produtos = cur.fetchone()[0]
-
-    cur.execute("SELECT COUNT(*) FROM produtos WHERE quantidade < 10")
-    estoque_baixo = cur.fetchone()[0]
-
-    hoje = str(date.today())
-
-    cur.execute("SELECT COUNT(*) FROM produtos WHERE validade < ?", (hoje,))
-    vencidos = cur.fetchone()[0]
-
-    conn.close()
-
-    return render_template(
-        "dashboard.html",
-        total_produtos=total_produtos,
-        estoque_baixo=estoque_baixo,
-        vencidos=vencidos
-    )
-
-@app.route("/produtos")
-def produtos():
-    if not session.get("usuario"):
-        return redirect("/")
-
-    conn = get_db()
-    cur = conn.cursor()
-
-    cur.execute("SELECT * FROM produtos ORDER BY nome")
+    cur.execute("SELECT id, nome, quantidade FROM produtos ORDER BY id DESC")
     produtos = cur.fetchall()
-
+    cur.close()
     conn.close()
+    return render_template_string(HTML, produtos=produtos)
 
-    return render_template("produtos.html", produtos=produtos)
-
-@app.route("/cadastrar", methods=["POST"])
-def cadastrar():
-    if not session.get("usuario"):
-        return redirect("/")
-
+@app.route("/novo", methods=["POST"])
+def novo():
     nome = request.form["nome"]
-    quantidade = int(request.form["quantidade"])
-    lote = request.form["lote"]
-    fabricacao = request.form["fabricacao"]
-    validade = request.form["validade"]
+    quantidade = request.form["quantidade"]
 
     conn = get_db()
     cur = conn.cursor()
-
     cur.execute(
-        '''
-        INSERT INTO produtos(nome, quantidade, lote, fabricacao, validade)
-        VALUES (?, ?, ?, ?, ?)
-        ''',
-        (nome, quantidade, lote, fabricacao, validade)
+        "INSERT INTO produtos (nome, quantidade) VALUES (%s,%s)",
+        (nome, quantidade)
     )
-
     conn.commit()
+    cur.close()
     conn.close()
 
-    return redirect("/produtos")
-
-@app.route("/entrada/<int:id>", methods=["POST"])
-def entrada(id):
-    quantidade = int(request.form["quantidade"])
-
-    conn = get_db()
-    cur = conn.cursor()
-
-    cur.execute(
-        "UPDATE produtos SET quantidade = quantidade + ? WHERE id = ?",
-        (quantidade, id)
-    )
-
-    cur.execute(
-        '''
-        INSERT INTO movimentacoes(produto_id, tipo, quantidade, usuario, data_movimentacao)
-        VALUES (?, ?, ?, ?, ?)
-        ''',
-        (id, "Entrada", quantidade, session["usuario"], datetime.now())
-    )
-
-    conn.commit()
-    conn.close()
-
-    return redirect("/produtos")
-
-@app.route("/saida/<int:id>", methods=["POST"])
-def saida(id):
-    quantidade = int(request.form["quantidade"])
-
-    conn = get_db()
-    cur = conn.cursor()
-
-    cur.execute(
-        "UPDATE produtos SET quantidade = quantidade - ? WHERE id = ?",
-        (quantidade, id)
-    )
-
-    cur.execute(
-        '''
-        INSERT INTO movimentacoes(produto_id, tipo, quantidade, usuario, data_movimentacao)
-        VALUES (?, ?, ?, ?, ?)
-        ''',
-        (id, "Saída", quantidade, session["usuario"], datetime.now())
-    )
-
-    conn.commit()
-    conn.close()
-
-    return redirect("/produtos")
-
-@app.route("/movimentacoes")
-def movimentacoes():
-    conn = get_db()
-    cur = conn.cursor()
-
-    cur.execute('''
-    SELECT m.id, p.nome, m.tipo, m.quantidade, m.usuario, m.data_movimentacao
-    FROM movimentacoes m
-    JOIN produtos p ON p.id = m.produto_id
-    ORDER BY m.id DESC
-    ''')
-
-    dados = cur.fetchall()
-
-    conn.close()
-
-    return render_template("movimentacoes.html", dados=dados)
+    return redirect(url_for("index"))
 
 if __name__ == "__main__":
-    init_db()
     app.run(debug=True)
-else:
-    init_db()
