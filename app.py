@@ -56,10 +56,32 @@ def init_db():
     conn.commit()
     conn.close()
 
-@app.route("/novo")
+@app.route("/novo", methods=["GET", "POST"])
 def novo():
-    if not session.get("usuario"):
-        return redirect("/")
+
+    if request.method == "POST":
+
+        nome = request.form["nome"]
+        quantidade = request.form["quantidade"]
+        lote = request.form["lote"]
+        fabricacao = request.form["fabricacao"]
+        validade = request.form["validade"]
+
+        conn = get_db()
+        cur = conn.cursor()
+
+        cur.execute("""
+            INSERT INTO produtos
+            (nome, quantidade, lote, fabricacao, validade)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (nome, quantidade, lote, fabricacao, validade))
+
+        conn.commit()
+
+        cur.close()
+        conn.close()
+
+        return redirect("/dashboard")
 
     return render_template("novo.html")
 
