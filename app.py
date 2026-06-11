@@ -12,6 +12,22 @@ def get_db():
         sslmode="require"
     )
 
+def criar_tabelas():
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS produtos (
+        id SERIAL PRIMARY KEY,
+        nome VARCHAR(200) NOT NULL,
+        quantidade INTEGER NOT NULL
+    )
+    """)
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
 HTML = """
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -29,6 +45,7 @@ button{background:#2563eb;color:white;border:none}
 </head>
 <body>
 <div class="card">
+
 <h1>Sistema Hospitalar</h1>
 
 <form method="POST" action="/novo">
@@ -53,19 +70,30 @@ button{background:#2563eb;color:white;border:none}
 {% endfor %}
 
 </table>
+
 </div>
 </body>
 </html>
 """
 
+criar_tabelas()
+
 @app.route("/")
 def index():
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("SELECT id, nome, quantidade FROM produtos ORDER BY id DESC")
+
+    cur.execute("""
+        SELECT id, nome, quantidade
+        FROM produtos
+        ORDER BY id DESC
+    """)
+
     produtos = cur.fetchall()
+
     cur.close()
     conn.close()
+
     return render_template_string(HTML, produtos=produtos)
 
 @app.route("/novo", methods=["POST"])
@@ -75,10 +103,12 @@ def novo():
 
     conn = get_db()
     cur = conn.cursor()
+
     cur.execute(
-        "INSERT INTO produtos (nome, quantidade) VALUES (%s,%s)",
+        "INSERT INTO produtos (nome, quantidade) VALUES (%s, %s)",
         (nome, quantidade)
     )
+
     conn.commit()
     cur.close()
     conn.close()
@@ -86,4 +116,4 @@ def novo():
     return redirect(url_for("index"))
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
