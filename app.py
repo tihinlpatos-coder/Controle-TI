@@ -16,6 +16,18 @@ def criar_tabelas():
     conn = get_db()
     cur = conn.cursor()
 
+    # Usuários
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS usuarios (
+        id SERIAL PRIMARY KEY,
+        nome VARCHAR(200) NOT NULL,
+        usuario VARCHAR(100) UNIQUE NOT NULL,
+        senha VARCHAR(255) NOT NULL,
+        perfil VARCHAR(50) DEFAULT 'usuario'
+    )
+    """)
+
+    # Produtos / Almoxarifado
     cur.execute("""
     CREATE TABLE IF NOT EXISTS produtos (
         id SERIAL PRIMARY KEY,
@@ -24,59 +36,29 @@ def criar_tabelas():
     )
     """)
 
+    # Setores
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS setores (
+        id SERIAL PRIMARY KEY,
+        nome VARCHAR(200) NOT NULL
+    )
+    """)
+
+    # Chamados de TI
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS chamados (
+        id SERIAL PRIMARY KEY,
+        solicitante VARCHAR(200),
+        setor VARCHAR(200),
+        descricao TEXT,
+        status VARCHAR(50) DEFAULT 'ABERTO',
+        data_abertura TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
     conn.commit()
     cur.close()
     conn.close()
-
-HTML = """
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-<meta charset="UTF-8">
-<title>Sistema Hospitalar</title>
-<style>
-body{font-family:Arial;background:#f4f4f4;padding:30px}
-.card{background:white;padding:20px;border-radius:10px}
-input,button{padding:10px;margin:5px;width:100%}
-table{width:100%;margin-top:20px;border-collapse:collapse}
-th,td{border:1px solid #ccc;padding:10px}
-button{background:#2563eb;color:white;border:none}
-</style>
-</head>
-<body>
-<div class="card">
-
-<h1>Sistema Hospitalar</h1>
-
-<form method="POST" action="/novo">
-<input type="text" name="nome" placeholder="Nome do produto" required>
-<input type="number" name="quantidade" placeholder="Quantidade" required>
-<button type="submit">Cadastrar Produto</button>
-</form>
-
-<table>
-<tr>
-<th>ID</th>
-<th>Produto</th>
-<th>Quantidade</th>
-</tr>
-
-{% for p in produtos %}
-<tr>
-<td>{{p[0]}}</td>
-<td>{{p[1]}}</td>
-<td>{{p[2]}}</td>
-</tr>
-{% endfor %}
-
-</table>
-
-</div>
-</body>
-</html>
-"""
-
-criar_tabelas()
 
 @app.route("/")
 def index():
