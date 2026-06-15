@@ -76,7 +76,10 @@ def index():
     cur.close()
     conn.close()
 
-    return render_template_string(HTML, produtos=produtos)
+    return """
+<h1>Sistema Hospitalar</h1>
+<p>Banco funcionando.</p>
+"""
 
 @app.route("/novo", methods=["POST"])
 def novo():
