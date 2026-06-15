@@ -56,9 +56,11 @@ def criar_tabelas():
     )
     """)
 
-    conn.commit()
-    cur.close()
+   def criar_tabelas():
+    ...
     conn.close()
+
+criar_tabelas()
 
 @app.route("/")
 def index():
