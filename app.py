@@ -23,16 +23,7 @@ def criar_tabelas():
         nome VARCHAR(200) NOT NULL,
         usuario VARCHAR(100) UNIQUE NOT NULL,
         senha VARCHAR(255) NOT NULL,
-        perfil VARCHAR(50) DEFAULT 'usuario'
-    )
-    """)
-
-    # Produtos
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS produtos (
-        id SERIAL PRIMARY KEY,
-        nome VARCHAR(200) NOT NULL,
-        quantidade INTEGER NOT NULL
+        perfil VARCHAR(50) DEFAULT 'USUARIO'
     )
     """)
 
@@ -44,6 +35,30 @@ def criar_tabelas():
     )
     """)
 
+    # Produtos
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS produtos (
+        id SERIAL PRIMARY KEY,
+        nome VARCHAR(200) NOT NULL,
+        quantidade INTEGER DEFAULT 0,
+        estoque_minimo INTEGER DEFAULT 0
+    )
+    """)
+
+    # Equipamentos
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS equipamentos (
+        id SERIAL PRIMARY KEY,
+        patrimonio VARCHAR(50),
+        tipo VARCHAR(100),
+        marca VARCHAR(100),
+        modelo VARCHAR(100),
+        serie VARCHAR(100),
+        setor VARCHAR(100),
+        status VARCHAR(50) DEFAULT 'ATIVO'
+    )
+    """)
+
     # Chamados
     cur.execute("""
     CREATE TABLE IF NOT EXISTS chamados (
@@ -51,7 +66,9 @@ def criar_tabelas():
         solicitante VARCHAR(200),
         setor VARCHAR(200),
         descricao TEXT,
+        prioridade VARCHAR(20) DEFAULT 'MEDIA',
         status VARCHAR(50) DEFAULT 'ABERTO',
+        tecnico VARCHAR(200),
         data_abertura TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """)
@@ -62,7 +79,33 @@ def criar_tabelas():
 
 # Cria as tabelas automaticamente
 criar_tabelas()
+def criar_admin():
+    conn = get_db()
+    cur = conn.cursor()
 
+    cur.execute("""
+        SELECT * FROM usuarios
+        WHERE usuario='admin'
+    """)
+
+    existe = cur.fetchone()
+
+    if not existe:
+        cur.execute("""
+            INSERT INTO usuarios
+            (nome, usuario, senha, perfil)
+            VALUES
+            ('Administrador',
+             'admin',
+             'admin123',
+             'ADMIN')
+        """)
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+criar_admin()
 @app.route("/")
 def index():
     conn = get_db()
