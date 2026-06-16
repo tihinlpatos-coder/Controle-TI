@@ -136,8 +136,10 @@ def login():
 
             return redirect("/dashboard")
 
-    return render_template("login.html")
-    @app.route("/dashboard")
+   return render_template("login.html")
+
+
+@app.route("/dashboard")
 def dashboard():
 
     if "usuario" not in session:
@@ -148,9 +150,12 @@ def dashboard():
         usuario=session["usuario"],
         perfil=session["perfil"]
     )
+
+
 @app.route("/")
 def index():
     return redirect("/login")
+    
     conn = get_db()
     cur = conn.cursor()
 
