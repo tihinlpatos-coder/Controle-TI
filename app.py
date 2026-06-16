@@ -1,8 +1,9 @@
-from flask import Flask, request, redirect, url_for
+from flask import Flask, request, redirect, url_for, render_template, session
 import psycopg2
 import os
 
 app = Flask(__name__)
+app.secret_key = "hinl2026"
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
@@ -106,8 +107,50 @@ def criar_admin():
     conn.close()
 
 criar_admin()
+@app.route("/login", methods=["GET", "POST"])
+def login():
+
+    if request.method == "POST":
+
+        usuario = request.form["usuario"]
+        senha = request.form["senha"]
+
+        conn = get_db()
+        cur = conn.cursor()
+
+        cur.execute("""
+            SELECT usuario, perfil
+            FROM usuarios
+            WHERE usuario=%s
+            AND senha=%s
+        """, (usuario, senha))
+
+        user = cur.fetchone()
+
+        cur.close()
+        conn.close()
+
+        if user:
+            session["usuario"] = user[0]
+            session["perfil"] = user[1]
+
+            return redirect("/dashboard")
+
+    return render_template("login.html")
+    @app.route("/dashboard")
+def dashboard():
+
+    if "usuario" not in session:
+        return redirect("/login")
+
+    return render_template(
+        "dashboard.html",
+        usuario=session["usuario"],
+        perfil=session["perfil"]
+    )
 @app.route("/")
 def index():
+    return redirect("/login")
     conn = get_db()
     cur = conn.cursor()
 
