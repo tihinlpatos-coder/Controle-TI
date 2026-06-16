@@ -1,4 +1,4 @@
-from flask import Flask, render_template_string, request, redirect, url_for
+from flask import Flask, request, redirect, url_for
 import psycopg2
 import os
 
@@ -27,7 +27,7 @@ def criar_tabelas():
     )
     """)
 
-    # Produtos / Almoxarifado
+    # Produtos
     cur.execute("""
     CREATE TABLE IF NOT EXISTS produtos (
         id SERIAL PRIMARY KEY,
@@ -44,7 +44,7 @@ def criar_tabelas():
     )
     """)
 
-    # Chamados de TI
+    # Chamados
     cur.execute("""
     CREATE TABLE IF NOT EXISTS chamados (
         id SERIAL PRIMARY KEY,
@@ -56,10 +56,11 @@ def criar_tabelas():
     )
     """)
 
-   def criar_tabelas():
-    ...
+    conn.commit()
+    cur.close()
     conn.close()
 
+# Cria as tabelas automaticamente
 criar_tabelas()
 
 @app.route("/")
@@ -78,10 +79,38 @@ def index():
     cur.close()
     conn.close()
 
-    return """
-<h1>Sistema Hospitalar</h1>
-<p>Banco funcionando.</p>
-"""
+    html = """
+    <h1>Sistema Hospitalar</h1>
+    <h2>Produtos cadastrados</h2>
+
+    <form action="/novo" method="post">
+        <input type="text" name="nome" placeholder="Produto" required>
+        <input type="number" name="quantidade" placeholder="Quantidade" required>
+        <button type="submit">Salvar</button>
+    </form>
+
+    <hr>
+
+    <table border="1">
+        <tr>
+            <th>ID</th>
+            <th>Produto</th>
+            <th>Quantidade</th>
+        </tr>
+    """
+
+    for p in produtos:
+        html += f"""
+        <tr>
+            <td>{p[0]}</td>
+            <td>{p[1]}</td>
+            <td>{p[2]}</td>
+        </tr>
+        """
+
+    html += "</table>"
+
+    return html
 
 @app.route("/novo", methods=["POST"])
 def novo():
