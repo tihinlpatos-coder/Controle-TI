@@ -106,7 +106,6 @@ def criar_admin():
     cur.close()
     conn.close()
 
-
 criar_tabelas()
 criar_admin()
 
