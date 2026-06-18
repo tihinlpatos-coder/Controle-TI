@@ -87,27 +87,20 @@ def criar_admin():
     conn = get_db()
     cur = conn.cursor()
 
-    cur.execute(
-        "SELECT * FROM usuarios WHERE usuario=%s",
-        ("admin",)
-    )
+    cur.execute("DELETE FROM usuarios WHERE usuario='admin'")
 
-    existe = cur.fetchone()
-
-    if not existe:
-
-        cur.execute("""
+    cur.execute("""
         INSERT INTO usuarios
         (nome, usuario, senha, perfil)
         VALUES
         (%s,%s,%s,%s)
-        """,
-        (
-            "Administrador",
-            "admin",
-            "admin123",
-            "ADMIN"
-        ))
+    """,
+    (
+        "Administrador",
+        "admin",
+        "admin123",
+        "ADMIN"
+    ))
 
     conn.commit()
     cur.close()
