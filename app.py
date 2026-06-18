@@ -113,7 +113,6 @@ criar_admin()
 def index():
     return redirect(url_for("login"))
 
-
 @app.route("/login", methods=["GET", "POST"])
 def login():
 
@@ -121,6 +120,9 @@ def login():
 
         usuario = request.form["usuario"]
         senha = request.form["senha"]
+
+        print("Usuario digitado:", usuario)
+        print("Senha digitada:", senha)
 
         conn = get_db()
         cur = conn.cursor()
@@ -137,6 +139,8 @@ def login():
 
         user = cur.fetchone()
 
+        print("Resultado:", user)
+
         cur.close()
         conn.close()
 
@@ -144,10 +148,14 @@ def login():
             session["usuario"] = user[0]
             session["perfil"] = user[1]
 
+            print("LOGIN OK")
+
             return redirect(url_for("dashboard"))
 
-    return render_template("login.html")
+        else:
+            print("LOGIN FALHOU")
 
+    return render_template("login.html")
 
 @app.route("/dashboard")
 def dashboard():
