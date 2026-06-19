@@ -121,12 +121,20 @@ def login():
         usuario = request.form["usuario"]
         senha = request.form["senha"]
 
-        print("Usuario digitado:", usuario)
-        print("Senha digitada:", senha)
-
         conn = get_db()
         cur = conn.cursor()
 
+        # Mostrar todos os usuários cadastrados
+        cur.execute("""
+            SELECT id, nome, usuario, senha, perfil
+            FROM usuarios
+        """)
+
+        usuarios = cur.fetchall()
+        print("USUARIOS NO BANCO:")
+        print(usuarios)
+
+        # Fazer login
         cur.execute(
             """
             SELECT usuario, perfil
@@ -139,7 +147,7 @@ def login():
 
         user = cur.fetchone()
 
-        print("Resultado:", user)
+        print("RESULTADO LOGIN:", user)
 
         cur.close()
         conn.close()
@@ -147,13 +155,9 @@ def login():
         if user:
             session["usuario"] = user[0]
             session["perfil"] = user[1]
-
-            print("LOGIN OK")
-
             return redirect(url_for("dashboard"))
 
-        else:
-            print("LOGIN FALHOU")
+        print("LOGIN FALHOU")
 
     return render_template("login.html")
 
