@@ -1,108 +1,47 @@
-from flask import Flask, render_template, request, redirect, url_for, session
-import psycopg2
-import os
+from flask import Flask, render_template, session, redirect, url_for
+
+from config import Config
+from database import criar_tabelas, criar_admin
 
 app = Flask(__name__)
-app.secret_key = "hinl2026"
+app.config.from_object(Config)
 
-DATABASE_URL = os.getenv("DATABASE_URL")
-
-def get_db():
-    return psycopg2.connect(
-        DATABASE_URL,
-        sslmode="require"
-    )
-
-def criar_tabelas():
-    conn = get_db()
-    cur = conn.cursor()
-
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS usuarios(
-        id SERIAL PRIMARY KEY,
-        nome VARCHAR(200),
-        usuario VARCHAR(100) UNIQUE,
-        senha VARCHAR(200),
-        perfil VARCHAR(50)
-    )
-    """)
-
-    conn.commit()
-    cur.close()
-    conn.close()
-
-def criar_admin():
-    conn = get_db()
-    cur = conn.cursor()
-
-    cur.execute(
-        """
-        SELECT * FROM usuarios
-        WHERE usuario=%s
-        """,
-        ("admin",)
-    )
-
-    existe = cur.fetchone()
-
-    if not existe:
-        cur.execute(
-            """
-            INSERT INTO usuarios
-            (nome, usuario, senha, perfil)
-            VALUES (%s,%s,%s,%s)
-            """,
-            ("Administrador", "admin", "admin123", "ADMIN")
-        )
-
-    conn.commit()
-    cur.close()
-    conn.close()
-
+# Inicializa o banco
 criar_tabelas()
 criar_admin()
 
+
 @app.route("/")
 def index():
+    if "usuario" in session:
+        return redirect(url_for("dashboard"))
     return redirect(url_for("login"))
 
+
+# ==========================
+# LOGIN
+# ==========================
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    erro = None
+    from routes.auth import login_usuario
+    return login_usuario()
 
-    if request.method == "POST":
-        usuario = request.form["usuario"]
-        senha = request.form["senha"]
 
-        conn = get_db()
-        cur = conn.cursor()
+# ==========================
+# LOGOUT
+# ==========================
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
 
-        cur.execute(
-            """
-            SELECT usuario, perfil
-            FROM usuarios
-            WHERE usuario=%s
-            AND senha=%s
-            """,
-            (usuario, senha)
-        )
 
-        user = cur.fetchone()
-
-        cur.close()
-        conn.close()
-
-        if user:
-            session["usuario"] = user[0]
-            session["perfil"] = user[1]
-            return redirect(url_for("dashboard"))
-
-        erro = "Usuário ou senha inválidos"
-
-    return render_template("login.html", erro=erro)
-
+# ==========================
+# DASHBOARD
+# ==========================
 @app.route("/dashboard")
 def dashboard():
+
     if "usuario" not in session:
         return redirect(url_for("login"))
 
@@ -112,13 +51,74 @@ def dashboard():
         perfil=session["perfil"]
     )
 
-@app.route("/logout")
-def logout():
-    session.clear()
-    return redirect(url_for("login"))
+
+# ==========================
+# USUÁRIOS
+# ==========================
+@app.route("/usuarios")
+def usuarios():
+
+    if "usuario" not in session:
+        return redirect(url_for("login"))
+
+    from routes.usuarios import listar_usuarios
+    return listar_usuarios()
+
+
+# ==========================
+# EQUIPAMENTOS
+# ==========================
+@app.route("/equipamentos")
+def equipamentos():
+
+    if "usuario" not in session:
+        return redirect(url_for("login"))
+
+    from routes.equipamentos import listar_equipamentos
+    return listar_equipamentos()
+
+
+# ==========================
+# CHAMADOS
+# ==========================
+@app.route("/chamados")
+def chamados():
+
+    if "usuario" not in session:
+        return redirect(url_for("login"))
+
+    from routes.chamados import listar_chamados
+    return listar_chamados()
+
+
+# ==========================
+# ALMOXARIFADO
+# ==========================
+@app.route("/almoxarifado")
+def almoxarifado():
+
+    if "usuario" not in session:
+        return redirect(url_for("login"))
+
+    from routes.almoxarifado import listar_produtos
+    return listar_produtos()
+
+
+# ==========================
+# RELATÓRIOS
+# ==========================
+@app.route("/relatorios")
+def relatorios():
+
+    if "usuario" not in session:
+        return redirect(url_for("login"))
+
+    return render_template("relatorios.html")
+
 
 if __name__ == "__main__":
     app.run(
         host="0.0.0.0",
-        port=int(os.environ.get("PORT", 10000))
+        port=5000,
+        debug=True
     )
