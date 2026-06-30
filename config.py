@@ -5,4 +5,6 @@ class Config:
 
     DATABASE_URL = os.getenv("DATABASE_URL")
 
-    DEBUG = False
+    SESSION_PERMANENT = False
+
+    TEMPLATES_AUTO_RELOAD = True
