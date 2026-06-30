@@ -86,30 +86,24 @@ def criar_admin():
     conn = get_db()
     cur = conn.cursor()
 
-    cur.execute(
-        "SELECT id FROM usuarios WHERE usuario=%s",
-        ("admin",)
-    )
+    senha_hash = generate_password_hash("admin123")
 
-    usuario = cur.fetchone()
+    cur.execute("""
+        DELETE FROM usuarios
+        WHERE usuario='admin'
+    """)
 
-    if not usuario:
-
-        senha_hash = generate_password_hash("admin123")
-
-        cur.execute("""
-            INSERT INTO usuarios
-            (nome, usuario, senha, perfil)
-            VALUES (%s,%s,%s,%s)
-        """,
-        (
-            "Administrador",
-            "admin",
-            senha_hash,
-            "ADMIN"
-        ))
-
-        print("Administrador criado.")
+    cur.execute("""
+        INSERT INTO usuarios
+        (nome, usuario, senha, perfil)
+        VALUES (%s,%s,%s,%s)
+    """,
+    (
+        "Administrador",
+        "admin",
+        senha_hash,
+        "ADMIN"
+    ))
 
     conn.commit()
     cur.close()
