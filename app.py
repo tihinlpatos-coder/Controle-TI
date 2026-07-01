@@ -276,3 +276,90 @@ def logout():
 
     return redirect(url_for("login"))
     
+# =====================================
+# EDITAR USUÁRIO
+# =====================================
+
+@app.route("/usuarios/editar/<int:id>", methods=["GET", "POST"])
+def editar_usuario(id):
+
+    if "usuario" not in session:
+        return redirect(url_for("login"))
+
+    if session["perfil"] != "ADMIN":
+        return "Acesso negado", 403
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    if request.method == "POST":
+
+        nome = request.form["nome"]
+        usuario = request.form["usuario"]
+        perfil = request.form["perfil"]
+
+        cur.execute("""
+            UPDATE usuarios
+            SET nome=%s,
+                usuario=%s,
+                perfil=%s
+            WHERE id=%s
+        """,
+        (
+            nome,
+            usuario,
+            perfil,
+            id
+        ))
+
+        conn.commit()
+
+        cur.close()
+        conn.close()
+
+        return redirect(url_for("usuarios"))
+
+    cur.execute("""
+        SELECT id,nome,usuario,perfil
+        FROM usuarios
+        WHERE id=%s
+    """,(id,))
+
+    usuario = cur.fetchone()
+
+    cur.close()
+    conn.close()
+
+    return render_template(
+        "usuario_editar.html",
+        usuario=usuario
+    )
+
+# =====================================
+# EXCLUIR USUÁRIO
+# =====================================
+
+@app.route("/usuarios/excluir/<int:id>")
+def excluir_usuario(id):
+
+    if "usuario" not in session:
+        return redirect(url_for("login"))
+
+    if session["perfil"] != "ADMIN":
+        return "Acesso negado",403
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute(
+        "DELETE FROM usuarios WHERE id=%s",
+        (id,)
+    )
+
+    conn.commit()
+
+    cur.close()
+    conn.close()
+
+    return redirect(url_for("usuarios"))
+
