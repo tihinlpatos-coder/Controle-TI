@@ -193,6 +193,82 @@ def dashboard():
 # LOGOUT
 # =====================================
 
+# =====================================
+# LISTAR USUÁRIOS
+# =====================================
+
+@app.route("/usuarios")
+def usuarios():
+
+    if "usuario" not in session:
+        return redirect(url_for("login"))
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT id, nome, usuario, perfil
+        FROM usuarios
+        ORDER BY nome
+    """)
+
+    usuarios = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return render_template(
+        "usuarios.html",
+        usuarios=usuarios
+    )
+
+
+# =====================================
+# NOVO USUÁRIO
+# =====================================
+
+@app.route("/usuarios/novo", methods=["GET", "POST"])
+def novo_usuario():
+
+    if "usuario" not in session:
+        return redirect(url_for("login"))
+
+    if session["perfil"] != "ADMIN":
+        return "Acesso negado", 403
+
+    if request.method == "POST":
+
+        nome = request.form["nome"]
+        usuario = request.form["usuario"]
+        senha = request.form["senha"]
+        perfil = request.form["perfil"]
+
+        senha_hash = generate_password_hash(senha)
+
+        conn = get_db()
+        cur = conn.cursor()
+
+        cur.execute("""
+            INSERT INTO usuarios
+            (nome, usuario, senha, perfil)
+            VALUES (%s,%s,%s,%s)
+        """,
+        (
+            nome,
+            usuario,
+            senha_hash,
+            perfil
+        ))
+
+        conn.commit()
+
+        cur.close()
+        conn.close()
+
+        return redirect(url_for("usuarios"))
+
+    return render_template("usuario_novo.html")
+    
 @app.route("/logout")
 def logout():
 
