@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block conteudo %}
+
+<div class="container mt-4">
+
+<h3>Novo Usuário</h3>
+
+<form method="POST">
+
+<div class="mb-3">
+<label>Nome</label>
+<input class="form-control" name="nome" required>
+</div>
+
+<div class="mb-3">
+<label>Usuário</label>
+<input class="form-control" name="usuario" required>
+</div>
+
+<div class="mb-3">
+<label>Senha</label>
+<input class="form-control" type="password" name="senha" required>
+</div>
+
+<div class="mb-3">
+<label>Perfil</label>
+
+<select class="form-control" name="perfil">
+
+<option>ADMIN</option>
+<option>TECNICO</option>
+<option>USUARIO</option>
+
+</select>
+
+</div>
+
+<button class="btn btn-success">
+Salvar
+</button>
+
+<a href="/usuarios" class="btn btn-secondary">
+Cancelar
+</a>
+
+</form>
+
+</div>
+
+{% endblock %}
