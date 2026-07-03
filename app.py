@@ -268,6 +268,32 @@ def novo_usuario():
         return redirect(url_for("usuarios"))
 
     return render_template("usuario_novo.html")
+
+# =====================================
+# USUÁRIOS
+# =====================================
+
+@app.route("/usuarios")
+def usuarios():
+
+    if "usuario" not in session:
+        return redirect(url_for("login"))
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT id, nome, usuario, perfil
+        FROM usuarios
+        ORDER BY nome
+    """)
+
+    lista = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return render_template("usuarios.html", usuarios=lista)
     
 @app.route("/logout")
 def logout():
