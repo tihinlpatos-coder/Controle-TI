@@ -4,32 +4,58 @@
 
 <div class="container mt-4">
 
-<h3>Novo Usuário</h3>
+<h2>Novo Usuário</h2>
 
 <form method="POST">
 
 <div class="mb-3">
+
 <label>Nome</label>
-<input class="form-control" name="nome" required>
+
+<input
+type="text"
+name="nome"
+class="form-control"
+required>
+
 </div>
 
 <div class="mb-3">
+
 <label>Usuário</label>
-<input class="form-control" name="usuario" required>
+
+<input
+type="text"
+name="usuario"
+class="form-control"
+required>
+
 </div>
 
 <div class="mb-3">
+
 <label>Senha</label>
-<input class="form-control" type="password" name="senha" required>
+
+<input
+type="password"
+name="senha"
+class="form-control"
+required>
+
 </div>
 
 <div class="mb-3">
+
 <label>Perfil</label>
 
-<select class="form-control" name="perfil">
+<select
+name="perfil"
+class="form-control">
 
 <option>ADMIN</option>
+
 <option>TECNICO</option>
+
 <option>USUARIO</option>
 
 </select>
@@ -37,11 +63,15 @@
 </div>
 
 <button class="btn btn-success">
+
 Salvar
+
 </button>
 
-<a href="/usuarios" class="btn btn-secondary">
+<a href="{{ url_for('usuarios') }}" class="btn btn-secondary">
+
 Cancelar
+
 </a>
 
 </form>
