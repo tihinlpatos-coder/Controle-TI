@@ -82,9 +82,13 @@ href="{{ url_for('static', filename='css/style.css') }}">
 
                 <span>
 
-                    <strong>{{ session['nome'] }}</strong>
+                    {% if session.get('nome') %}
 
-                    ({{ session['perfil'] }})
+                 <strong>{{ session.get('nome') }}</strong>
+
+                  ({{ session.get('perfil') }})
+
+                   {% endif %}
 
                 </span>
 
