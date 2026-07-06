@@ -1,48 +1,65 @@
 {% extends "base.html" %}
 
-{% block content %}
+{% block conteudo %}
 
 <div class="container mt-4">
 
     <div class="d-flex justify-content-between mb-3">
-        <h3>Usuários</h3>
 
-        <a href="#" class="btn btn-primary">
+        <h2>Usuários</h2>
+
+        <a href="{{ url_for('novo_usuario') }}" class="btn btn-success">
             Novo Usuário
         </a>
+
     </div>
 
-    <table class="table table-bordered table-hover">
+    <input
+        type="text"
+        id="pesquisa"
+        class="form-control mb-3"
+        placeholder="Pesquisar usuário..."
+        onkeyup="filtrarTabela()"
+    >
+
+    <table class="table table-striped table-hover" id="tabelaUsuarios">
 
         <thead class="table-dark">
+
             <tr>
-                <th>ID</th>
                 <th>Nome</th>
                 <th>Usuário</th>
                 <th>Perfil</th>
                 <th width="180">Ações</th>
             </tr>
+
         </thead>
 
         <tbody>
 
-        {% for u in usuarios %}
+        {% for usuario in usuarios %}
 
             <tr>
 
-                <td>{{ u[0] }}</td>
-                <td>{{ u[1] }}</td>
-                <td>{{ u[2] }}</td>
-                <td>{{ u[3] }}</td>
+                <td>{{ usuario[1] }}</td>
+
+                <td>{{ usuario[2] }}</td>
+
+                <td>{{ usuario[3] }}</td>
 
                 <td>
 
-                    <a href="#" class="btn btn-warning btn-sm">
+                    <a href="{{ url_for('editar_usuario', id=usuario[0]) }}"
+                       class="btn btn-warning btn-sm">
                         Editar
                     </a>
 
-                    <a href="#" class="btn btn-danger btn-sm">
+                    <a href="{{ url_for('excluir_usuario', id=usuario[0]) }}"
+                       class="btn btn-danger btn-sm"
+                       onclick="return confirm('Deseja realmente excluir este usuário?')">
+
                         Excluir
+
                     </a>
 
                 </td>
@@ -56,5 +73,34 @@
     </table>
 
 </div>
+
+<script>
+
+function filtrarTabela(){
+
+let filtro=document.getElementById("pesquisa").value.toUpperCase();
+
+let tabela=document.getElementById("tabelaUsuarios");
+
+let tr=tabela.getElementsByTagName("tr");
+
+for(let i=1;i<tr.length;i++){
+
+let td=tr[i].getElementsByTagName("td")[0];
+
+if(td){
+
+let texto=td.textContent;
+
+tr[i].style.display=
+texto.toUpperCase().indexOf(filtro)>-1 ? "" : "none";
+
+}
+
+}
+
+}
+
+</script>
 
 {% endblock %}
