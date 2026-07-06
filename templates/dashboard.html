@@ -1,23 +1,47 @@
-<div class="list-group">
+{% extends "base.html" %}
 
-   <a href="{{ url_for('usuarios') }}" class="list-group-item list-group-item-action">
-    Usuários
-</a>
+{% block conteudo %}
 
-    <a href="#" class="list-group-item list-group-item-action">
-        💻 Equipamentos
-    </a>
+<h2 class="mb-4">Painel de Controle</h2>
 
-    <a href="#" class="list-group-item list-group-item-action">
-        🎫 Chamados TI
-    </a>
+<div class="row">
 
-    <a href="#" class="list-group-item list-group-item-action">
-        📦 Almoxarifado
-    </a>
+    <div class="col-md-4 mb-3">
+        <div class="card shadow">
+            <div class="card-body text-center">
+                <h3>👥</h3>
+                <h5>Usuários</h5>
+                <a href="{{ url_for('usuarios') }}" class="btn btn-primary">
+                    Acessar
+                </a>
+            </div>
+        </div>
+    </div>
 
-    <a href="#" class="list-group-item list-group-item-action">
-        📊 Relatórios
-    </a>
+    <div class="col-md-4 mb-3">
+        <div class="card shadow">
+            <div class="card-body text-center">
+                <h3>💻</h3>
+                <h5>Equipamentos</h5>
+                <a href="#" class="btn btn-primary">
+                    Em desenvolvimento
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+        <div class="card shadow">
+            <div class="card-body text-center">
+                <h3>🎫</h3>
+                <h5>Chamados</h5>
+                <a href="#" class="btn btn-primary">
+                    Em desenvolvimento
+                </a>
+            </div>
+        </div>
+    </div>
 
 </div>
+
+{% endblock %}
